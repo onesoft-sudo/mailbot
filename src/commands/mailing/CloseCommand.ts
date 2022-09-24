@@ -50,7 +50,7 @@ export async function closeThread(client: DiscordClient, channel: string, closed
                     name: user.tag,
                     iconURL: user.displayAvatarURL()
                 } : undefined,
-                description: 'A thread was closed.',
+                title: 'Thread closed',
                 fields: [
                     {
                         name: 'User ID',

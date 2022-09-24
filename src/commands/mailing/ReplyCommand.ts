@@ -102,6 +102,7 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
                         name: author.tag,
                         iconURL: author.displayAvatarURL()
                     } : undefined,
+                    title: 'Reply Sent',
                     description: 'A new message was sent by **' + author.tag + '**.',
                     fields: [
                         {

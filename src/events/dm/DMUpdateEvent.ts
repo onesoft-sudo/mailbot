@@ -52,6 +52,7 @@ export default class DMUpdateEvent extends BaseEvent {
                 name: newMessage.author.tag,
                 iconURL: newMessage.author.displayAvatarURL()
             },
+            title: 'Message Updated',
             description: `**===Before===**\n${oldMessage.content}\n\n**+++===After===**\n${newMessage.content}`,
             fields: [
                 {

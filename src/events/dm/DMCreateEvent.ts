@@ -51,6 +51,7 @@ export async function createThread(client: DiscordClient, name: string | null, u
             name: user.tag,
             iconURL: user.displayAvatarURL()
         },
+        title: 'New Thread',
         description: 'A new thread was created. ' + channel!.toString(),
         fields: [
             {

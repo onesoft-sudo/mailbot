@@ -41,7 +41,7 @@ export default class DeleteCommand extends BaseCommand {
                 embeds: [
                     new EmbedBuilder({
                         color: 0x007bff,
-                        description: 'A thread channel was deleted.',
+                        title: 'Thread deleted',
                         fields: [
                             {
                                 name: 'Channel ID',
