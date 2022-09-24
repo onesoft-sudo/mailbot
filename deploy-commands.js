@@ -20,6 +20,18 @@ const slashCommands = [
         .addStringOption(opt => opt.setName('reason').setDescription('The reason for deleting this thread'))
         .addBooleanOption(opt => opt.setName('silent').setDescription('Close silently without DMing the user')),
     new SlashCommandBuilder()
+        .setName('block')
+        .setDescription('Block a member from using MailBot')
+        .addUserOption(opt => opt.setName('user').setDescription('The user to be blocked').setRequired(true))
+        .addStringOption(opt => opt.setName('reason').setDescription('The reason for blocking this user'))
+        .addBooleanOption(opt => opt.setName('notify').setDescription('Notify the user about this block')),
+    new SlashCommandBuilder()
+        .setName('unblock')
+        .setDescription('Unblock a member')
+        .addUserOption(opt => opt.setName('user').setDescription('The user to be unblocked').setRequired(true))
+        .addStringOption(opt => opt.setName('reason').setDescription('The reason for unblocking this user'))
+        .addBooleanOption(opt => opt.setName('notify').setDescription('Notify the user about this unblock')),
+    new SlashCommandBuilder()
         .setName('reply')
         .setDescription('Replies to a mail thread (DMs the thread author)')
         .addStringOption(opt => opt.setName('message').setDescription('The message to send').setRequired(true))

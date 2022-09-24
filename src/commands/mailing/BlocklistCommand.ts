@@ -15,7 +15,7 @@ export default class BlocklistCommand extends BaseCommand {
             await message.deferReply();
 
         const blocklist = await BlockedUser.find().limit(50);
-        let content = '**Blocklist**\n\n```';
+        let content = '';
         
         for await (const user of blocklist) {
             let userData = null;
@@ -30,7 +30,7 @@ export default class BlocklistCommand extends BaseCommand {
             content += `${userData ? userData.tag : user.discordID} | ${formatDistance(new Date(), user.createdAt, { addSuffix: true })}\n`;
         }
 
-        content += content === '' ? 'No blocked user.\n```' : '```';
+        content = '**Blocklist**\n\n```' + (content === '' ? 'No blocked user.\n```' : (content + '```'));
 
         await this.deferedReply(message, {
             content

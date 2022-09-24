@@ -42,7 +42,7 @@ export default class MessageCreateEvent extends BaseEvent {
                         continue;
                     }
 
-                    options[a] = cmdArgs[i + 1] ?? null;
+                    options[a] = cmdArgs[i + 1] ?? true;
                     i++;
                 }
 

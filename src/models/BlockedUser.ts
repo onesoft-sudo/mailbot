@@ -9,7 +9,8 @@ const schema = new mongoose.Schema({
     createdAt: {
         type: Date,
         required: true,
-    }
+    },
+    reason: String
 });
 
 export default mongoose.model('BlockedUser', schema);
