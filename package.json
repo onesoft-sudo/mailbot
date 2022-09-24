@@ -1,34 +1,46 @@
 {
-  "name": "mailbot",
-  "version": "3.2.1",
-  "main": "build/index.js",
-  "license": "AGPL-3.0-or-later",
-  "dependencies": {
-    "@commitlint/cli": "^17.0.3",
-    "@commitlint/config-conventional": "^17.0.3",
-    "bcrypt": "^5.0.1",
-    "date-fns": "^2.29.1",
-    "discord.js": "^14.1.2",
-    "dotenv": "^16.0.1",
-    "express": "^4.18.1",
-    "husky": "^8.0.1",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.5.0",
-    "reflect-metadata": "^0.1.13",
-    "split-string": "^6.1.0"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
-    "@types/express": "^4.17.13",
-    "@types/jsonwebtoken": "^8.5.8",
-    "@types/node": "^18.6.3",
-    "nodemon": "^2.0.19",
-    "typescript": "^4.7.4"
-  },
-  "scripts": {
-    "dev": "nodemon ./src/index.ts",
-    "start": "node ./build/index.js",
-    "build": "tsc",
-    "prepare": "husky install"
-  }
+    "name": "mailbot",
+    "version": "3.2.1",
+    "main": "build/index.js",
+    "description": "A Discord Bot for private communication with server staff",
+    "homepage": "https://github.com/virtual-designer/mailbot",
+    "readme": "https://github.com/virtual-designer/mailbot#readme",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/virtual-designer/mailbot"
+    },
+    "license": "AGPL-3.0-or-later",
+    "author": {
+        "name": "Ar Rakin",
+        "email": "rakinar2@onesoftnet.eu.org",
+        "url": "https://virtual-designer.github.io"
+    },
+    "dependencies": {
+        "@commitlint/cli": "^17.0.3",
+        "@commitlint/config-conventional": "^17.0.3",
+        "bcrypt": "^5.0.1",
+        "date-fns": "^2.29.1",
+        "discord.js": "^14.1.2",
+        "dotenv": "^16.0.1",
+        "express": "^4.18.1",
+        "husky": "^8.0.1",
+        "jsonwebtoken": "^8.5.1",
+        "mongoose": "^6.5.0",
+        "reflect-metadata": "^0.1.13",
+        "split-string": "^6.1.0"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^5.0.0",
+        "@types/express": "^4.17.13",
+        "@types/jsonwebtoken": "^8.5.8",
+        "@types/node": "^18.6.3",
+        "nodemon": "^2.0.19",
+        "typescript": "^4.7.4"
+    },
+    "scripts": {
+        "dev": "nodemon ./src/index.ts",
+        "start": "node ./build/index.js",
+        "build": "tsc",
+        "prepare": "husky install"
+    }
 }
