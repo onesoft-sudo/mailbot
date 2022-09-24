@@ -16,7 +16,8 @@ export default class AboutCommand extends BaseCommand {
                 new EmbedBuilder()
                     .setAuthor({ iconURL: client.user?.displayAvatarURL(), name: "MailBot" })
                     .setDescription(`
-                        A free and open source Discord Bot for contacting server staff, specially created for **The Everything Server**.
+                        A free and open source Discord Bot for private communication with server staff, specially created for **The Everything Server**.
+
                         Copyright (C) ${new Date().getFullYear()} OSN Inc.
                         This bot comes with ABSOLUTELY NO WARRANTY.
                         This is free software, and you are welcome to redistribute it under certain conditions.
@@ -47,6 +48,7 @@ export default class AboutCommand extends BaseCommand {
                     .setFooter({
                         text: `Copyright © OSN Inc 2022. All rights reserved.`
                     })
+                    .setColor('#007bff')
             ]
         });
     }
