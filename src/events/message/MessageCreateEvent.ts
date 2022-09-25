@@ -44,7 +44,7 @@ export default class MessageCreateEvent extends BaseEvent {
 
             const command = client.commands.get(cmdName);
             
-            if (command) {
+            if (command && command.legacy) {
                 const options: { [key: string]: string } = {};
                 const args: string[] = [];
 

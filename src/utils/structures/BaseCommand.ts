@@ -23,6 +23,10 @@ import CommandOptions from '../../types/CommandOptions';
 
 export default abstract class BaseCommand {
     public readonly mailOnly: boolean = false;
+    public readonly legacy: boolean = true;
+    public readonly interactions: boolean = true;
+    public readonly userContextMenu: boolean = false;
+    public readonly messageContextMenu: boolean = false;
     public readonly roles: RoleResolvable[] = [];
     public readonly requireModRole: boolean = true;
     public readonly permissions: PermissionsBitField | null = null;

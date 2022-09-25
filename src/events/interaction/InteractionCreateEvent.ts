@@ -38,11 +38,11 @@ export default class InteractionCreateEvent extends BaseEvent {
             return;
         }
 
-        if (interaction.isChatInputCommand()) {
+        if (interaction.isChatInputCommand() || interaction.isContextMenuCommand()) {
             const { commandName } = interaction;
             const command = client.commands.get(commandName);
 
-            if (command) {
+            if (command && command.interactions && (interaction.isChatInputCommand() || (command.userContextMenu && interaction.isUserContextMenuCommand()) || (command.messageContextMenu && interaction.isMessageContextMenuCommand()))) {
                 await command.execute(client, interaction);
             }
         }

@@ -33,6 +33,10 @@ const schema = new mongoose.Schema({
     fileMessage: {
         type: String,
         required: false,
+    },
+    authorID: {
+        type: String,
+        required: true
     }
 });
 

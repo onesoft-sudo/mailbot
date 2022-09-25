@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, CacheType, EmbedBuilder, Attachment, TextChannel, ChatInputCommandInteraction, User } from "discord.js";
+import { Message, CommandInteraction, CacheType, EmbedBuilder, Attachment, TextChannel, ChatInputCommandInteraction, User, Embed, Colors } from "discord.js";
 import Client from "../../client/Client";
 import StaffMessage from "../../models/StaffMessage";
 import Thread, { IThread } from "../../models/Thread";
@@ -24,7 +24,12 @@ export async function updateReply(client: Client, thread: IThread, id: string, {
             return false;
         }
 
+        if (staffMessage.authorID !== author.id) {
+            return 101;
+        }
+
         let isAnonymous: boolean = true;
+        let origEmbed: Embed | undefined;
 
         try {
             if (!user.dmChannel) {
@@ -48,9 +53,9 @@ export async function updateReply(client: Client, thread: IThread, id: string, {
 
             const { embeds } = message;
             
-            const embed = embeds.shift();
+            origEmbed = embeds.shift();
 
-            isAnonymous = embed?.author?.name === 'Staff';
+            isAnonymous = origEmbed?.author?.name === 'Staff';
 
             await message.edit({
                 embeds: [
@@ -73,6 +78,16 @@ export async function updateReply(client: Client, thread: IThread, id: string, {
             return null;
         }
 
+        const prevEmbed = new EmbedBuilder({
+            author: {
+                name: author.tag,
+                iconURL: author.displayAvatarURL()
+            },
+            description: (origEmbed?.description ?? '').trim() === '' ? '*No content*' : (origEmbed?.description ?? undefined),
+            footer: { text: `${isAnonymous ? 'Anonymous' : 'Normal'} Reply (Previous) • ${message.id}` },
+            color: Colors.Gold
+        }).setTimestamp();
+
         const embed = new EmbedBuilder({
             author: {
                 name: author.tag,
@@ -86,6 +101,7 @@ export async function updateReply(client: Client, thread: IThread, id: string, {
         if (channel) {
             await channel.send({
                 embeds: [
+                    prevEmbed,
                     embed,
                 ]
             });
@@ -128,6 +144,7 @@ export async function updateReply(client: Client, thread: IThread, id: string, {
                     color: 0x007bff
                 })
                 .setTimestamp(),
+                prevEmbed,
                 embed,
             ]
         }));
@@ -190,6 +207,9 @@ export default class EditCommand extends BaseCommand {
 
         if (result === false) {
             this.deferedReply(message, ":x: The given message does not exist.");
+        }
+        else if (result === 101) {
+            this.deferedReply(message, ":x: You can only edit messages sent by you!");
         }
         else if (message instanceof ChatInputCommandInteraction) {
             this.deferedReply(message, "Message updated successfully.");

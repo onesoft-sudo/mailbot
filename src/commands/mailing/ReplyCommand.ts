@@ -119,7 +119,8 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
             await StaffMessage.create({
                 dmID: message.id,
                 fileMessage: fileMessage?.id,
-                threadMessageID: reply.id
+                threadMessageID: reply.id,
+                authorID: author.id
             });
         }
 
