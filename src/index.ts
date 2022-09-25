@@ -37,6 +37,7 @@ const client = new DiscordClient({
     partials: [
         Partials.Message,
         Partials.Channel,
+        Partials.User
     ]
 });
 

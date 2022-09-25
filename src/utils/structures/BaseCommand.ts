@@ -43,15 +43,19 @@ export default abstract class BaseCommand {
         return this.aliases;
     }
 
-    async deferedReply(msg: Message | CommandInteraction, options: MessageReplyOptions | MessagePayload | InteractionReplyOptions) {
+    getAllNames(): string[] {
+        return [this.getName(), ...this.getAliases()];
+    }
+
+    async deferedReply(msg: Message | CommandInteraction, options: string | MessageReplyOptions | MessagePayload | InteractionReplyOptions) {
         if (msg instanceof Message) 
             await msg.reply(options as MessageReplyOptions);
         else {
             if (msg.deferred) {
-                await msg.editReply(options as MessagePayload);
+                await msg.editReply(options as (MessagePayload | string));
             }
             else {
-                await msg.reply(options as MessagePayload);
+                await msg.reply(options as (MessagePayload | string));
             }
         }
     }

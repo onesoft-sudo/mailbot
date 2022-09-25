@@ -36,7 +36,12 @@ const slashCommands = [
         .setDescription('Replies to a mail thread (DMs the thread author)')
         .addStringOption(opt => opt.setName('message').setDescription('The message to send').setRequired(true))
         .addBooleanOption(opt => opt.setName('anonymous').setDescription('Anonymous reply (Defaults to false)'))
-        .addAttachmentOption(opt => opt.setName('attachment').setDescription('Attachment to send'))
+        .addAttachmentOption(opt => opt.setName('attachment').setDescription('Attachment to send')),
+    new SlashCommandBuilder()
+        .setName('edit')
+        .setDescription('Edit a message sent by MailBot')
+        .addStringOption(opt => opt.setName('message').setDescription('The ID of the message to edit').setRequired(true))
+        .addStringOption(opt => opt.setName('content').setDescription('The new content of the message').setRequired(true))
 ];
 
 const contextMenuCommands = [];

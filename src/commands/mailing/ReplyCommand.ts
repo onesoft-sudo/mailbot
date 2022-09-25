@@ -23,6 +23,7 @@ import CommandOptions from "../../types/CommandOptions";
 import BaseCommand from "../../utils/structures/BaseCommand";
 import Thread, { IThread } from '../../models/Thread';
 import { formatSize, getChannel, getGuild, loggingChannel } from "../../utils/utils";
+import StaffMessage from "../../models/StaffMessage";
 
 export interface ThreadReplyOptions {
     content: string;
@@ -63,8 +64,10 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
         }
 
         let message: Message;
+        let fileMessage: Message | undefined;
 
         try {
+
             message = await user!.send({
                 embeds: [
                     new EmbedBuilder({
@@ -82,7 +85,7 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
             });
 
             if (files.length > 0) {
-                await user.send({ files });
+                fileMessage = await user.send({ files });
             }
         }
         catch (e) {
@@ -102,7 +105,7 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
 
 
         if (channel) {
-            await channel.send({
+            const reply = await channel.send({
                 embeds: [
                     embed,
                     ...media
@@ -112,6 +115,12 @@ export async function replyToThread(client: Client, thread: IThread, { content, 
             if (files.length > 0) {
                 await channel.send("Other files are also sent.");
             }
+
+            await StaffMessage.create({
+                dmID: message.id,
+                fileMessage: fileMessage?.id,
+                threadMessageID: reply.id
+            });
         }
 
         await (loggingChannel(client).send({
@@ -167,6 +176,19 @@ export default class ReplyCommand extends BaseCommand {
     }
 
     async run(client: Client, message: Message<boolean> | ChatInputCommandInteraction<CacheType>, options?: CommandOptions | undefined): Promise<void> {
+        if (options && options.args[0] === undefined) {
+            await message.reply({
+                embeds: [
+                    {
+                        description: ':x: You must specify a message to send.',
+                        color: 0xf14a60
+                    }
+                ]
+            });
+
+            return;
+        }
+
         let content = '', isAnonymous = false;
 
         if (options) {

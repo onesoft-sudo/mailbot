@@ -32,6 +32,13 @@ export default class MessageUpdateEvent extends BaseEvent {
 
         if (newMessage.channel.type === ChannelType.DM || !newMessage.guild) {
             client.emit('dmUpdate', oldMessage, newMessage);
+            return;
+        }
+
+        const replyCommands = [...client.commands.get('reply')!.getAllNames(), ...client.commands.get('update')!.getAllNames()];
+
+        if (replyCommands.some(cmd => newMessage.content.startsWith(`${client.config.prefix}${cmd}`))) {
+            console.log("Update staff message");
         }
     }
 }
