@@ -17,7 +17,7 @@
 * along with MailBot. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Attachment, AttachmentBuilder, EmbedBuilder, Message, TextChannel, User } from "discord.js";
+import { Attachment, AttachmentBuilder, Colors, EmbedBuilder, Message, TextChannel, User } from "discord.js";
 import DiscordClient from "../../client/Client";
 import Client from "../../client/Client";
 import BlockedUser from "../../models/BlockedUser";
@@ -53,10 +53,22 @@ export default class DMUpdateEvent extends BaseEvent {
             embeds: [
                 new EmbedBuilder({
                     author: {
+                        name: oldMessage.author.tag,
+                        iconURL: oldMessage.author.displayAvatarURL(),
+                    },
+                    description: `${oldMessage.content}`,
+                    footer: {
+                        text: `Previous Message • ${oldMessage.id}`
+                    },
+                    color: Colors.Gold
+                })
+                .setTimestamp(),
+                new EmbedBuilder({
+                    author: {
                         name: newMessage.author.tag,
                         iconURL: newMessage.author.displayAvatarURL(),
                     },
-                    description: `**===Before===**\n${oldMessage.content}\n\n**+++===After===**\n${newMessage.content}`,
+                    description: `${newMessage.content}`,
                     footer: {
                         text: `Updated • ${newMessage.id}`
                     },
