@@ -4,6 +4,7 @@ import dev.kord.core.event.Event
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
+import kotlin.reflect.full.primaryConstructor
 
 class DynamicLoader(private val application: Application) {
     private val EVENTS_PACKAGE = "org.onesoftnet.mailbot.events"
@@ -59,10 +60,21 @@ class DynamicLoader(private val application: Application) {
          val eventClasses = loadClassesInPackage<EventListener<Event>>(EVENTS_PACKAGE)
 
          eventClasses?.forEach {
-             val instance = it.createInstance()
+             val instance = it.primaryConstructor?.call(application) ?: return@forEach
              logger.info("Loading event: ${it.simpleName}")
+             instance.boot()
              instance.register(application)
-             instance.boot(application)
+        }
+    }
+
+    fun loadServices() {
+        val serviceClasses = loadClassesInPackage<AbstractService>("org.onesoftnet.mailbot.services")
+
+        serviceClasses?.forEach {
+            val instance = it.primaryConstructor?.call(application) ?: return@forEach
+            logger.info("Loading service: ${it.simpleName}")
+            instance.boot()
+            application.registerService(instance)
         }
     }
 }

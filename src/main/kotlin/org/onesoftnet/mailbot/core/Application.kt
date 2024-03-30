@@ -6,20 +6,28 @@ import dev.kord.cache.map.lruLinkedHashMap
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.core.Kord
 import dev.kord.core.enableEvents
-import dev.kord.gateway.Intent
-import dev.kord.gateway.Intents
-import dev.kord.gateway.PRIVILEGED
-import dev.kord.gateway.PrivilegedIntent
+import dev.kord.core.entity.Guild
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.on
+import dev.kord.gateway.*
+import io.ktor.util.reflect.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import org.ktorm.database.Database
+import org.onesoftnet.mailbot.annotations.Service
 import org.onesoftnet.mailbot.utils.Environment
+import kotlin.reflect.KClass
 
 
 val applicationScope = CoroutineScope(Dispatchers.Default)
 
 class Application(val kord: Kord) {
-    val loader = DynamicLoader(this)
+    private val loader = DynamicLoader(this)
+    private val services = mutableMapOf<KClass<out AbstractService>, AbstractService>()
+    private val serviceNames = mutableMapOf<String, AbstractService>()
+    private var mainGuild: Guild? = null
+
     val database = Database.connect(
         url = Environment.getOrFail("DB_URL"),
         driver = "org.postgresql.Driver",
@@ -39,7 +47,6 @@ class Application(val kord: Kord) {
                         MapEntryCache(cache, description, MapLikeCollection.lruLinkedHashMap(maxSize = 100))
                     }
                 }
-
             }
 
             return Application(kord)
@@ -47,7 +54,30 @@ class Application(val kord: Kord) {
     }
 
     fun boot() {
+        loader.loadServices()
         loader.loadEvents()
+    }
+
+    fun <T : AbstractService> registerService(instance: T) {
+        val annotation = instance::class.annotations.find { it.instanceOf(Service::class) } as Service?
+        val name = annotation?.name ?: instance::class.simpleName ?: return
+        serviceNames[name] = instance
+        services[instance::class] = instance
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <T : AbstractService> service(clazz: KClass<T>): T {
+        return services[clazz] as T
+    }
+
+    suspend fun getMainGuild(): Guild {
+        if (mainGuild == null) {
+            mainGuild = kord.guilds.first {
+                it.id.toString() == Environment.getOrFail("MAIN_GUILD_ID")
+            }
+        }
+
+        return mainGuild ?: throw IllegalStateException("Main guild not found!")
     }
 
     suspend fun run() {
@@ -59,14 +89,15 @@ class Application(val kord: Kord) {
 
             intents {
                 @OptIn(PrivilegedIntent::class)
-                intents += Intents(
+                intents += Intents.PRIVILEGED + Intents.ALL + Intents(
                     Intent.GuildMessages,
                     Intent.GuildMembers,
                     Intent.DirectMessages,
                     Intent.MessageContent,
                     Intent.Guilds,
                 )
-                enableEvents(dev.kord.core.event.message.MessageCreateEvent::class)
+
+                enableEvents(MessageCreateEvent::class)
             }
         }
     }
