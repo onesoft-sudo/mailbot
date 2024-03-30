@@ -8,6 +8,9 @@ import kotlin.reflect.full.primaryConstructor
 
 class DynamicLoader(private val application: Application) {
     private val EVENTS_PACKAGE = "org.onesoftnet.mailbot.events"
+    private val SERVICES_PACKAGE = "org.onesoftnet.mailbot.services"
+    private val COMMANDS_PACKAGE = "org.onesoftnet.mailbot.commands"
+
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private fun <T : Any> loadClassesInPackage(packageName: String): List<KClass<T>>? {
@@ -67,8 +70,18 @@ class DynamicLoader(private val application: Application) {
         }
     }
 
+     fun loadCommands() {
+         val commandClasses = loadClassesInPackage<Command>(COMMANDS_PACKAGE)
+
+         commandClasses?.forEach {
+             val instance = it.primaryConstructor?.call(application) ?: return@forEach
+             logger.info("Loading command: ${it.simpleName}")
+             application.addCommand(instance)
+        }
+    }
+
     fun loadServices() {
-        val serviceClasses = loadClassesInPackage<AbstractService>("org.onesoftnet.mailbot.services")
+        val serviceClasses = loadClassesInPackage<AbstractService>(SERVICES_PACKAGE)
 
         serviceClasses?.forEach {
             val instance = it.primaryConstructor?.call(application) ?: return@forEach

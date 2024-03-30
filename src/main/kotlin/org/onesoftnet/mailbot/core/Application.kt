@@ -27,6 +27,7 @@ class Application(val kord: Kord) {
     private val services = mutableMapOf<KClass<out AbstractService>, AbstractService>()
     private val serviceNames = mutableMapOf<String, AbstractService>()
     private var mainGuild: Guild? = null
+    private val commands = mutableMapOf<String, Command>()
 
     val database = Database.connect(
         url = Environment.getOrFail("DB_URL"),
@@ -56,6 +57,7 @@ class Application(val kord: Kord) {
     fun boot() {
         loader.loadServices()
         loader.loadEvents()
+        loader.loadCommands()
     }
 
     fun <T : AbstractService> registerService(instance: T) {
@@ -100,5 +102,17 @@ class Application(val kord: Kord) {
                 enableEvents(MessageCreateEvent::class)
             }
         }
+    }
+
+    fun addCommand(command: Command) {
+        commands[command.name] = command
+
+        command.aliases.forEach {
+            commands[it] = command
+        }
+    }
+
+    fun resolveCommand(name: String): Command? {
+        return commands[name]
     }
 }
