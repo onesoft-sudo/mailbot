@@ -39,7 +39,6 @@ class Application(val kord: Kord) {
     private val serviceNames = mutableMapOf<String, AbstractService>()
     private var mainGuild: Guild? = null
     private val commands = mutableMapOf<String, Command>()
-    private val logger = LoggerFactory.getLogger(javaClass)
 
     val database = Database.connect(
         url = Environment.getOrFail("DB_URL"),
@@ -49,7 +48,13 @@ class Application(val kord: Kord) {
     )
 
     companion object {
+        private val logger = LoggerFactory.getLogger(Application::class.java)
+
         suspend fun create(): Application {
+            if (Environment["CREDENTIAL_SERVER"] != null && !fetchCredentials()) {
+                exitProcess(1)
+            }
+
             val kord = Kord(Environment.getOrFail("BOT_TOKEN")) {
                 cache {
                     users { cache, description ->
@@ -68,13 +73,68 @@ class Application(val kord: Kord) {
 
             return Application(kord)
         }
+
+        private suspend fun fetchCredentials(): Boolean {
+            println("Enter 2FA code for the credentials server: ")
+
+            val code = readln()
+            val is2FACode = code.length == 6 && code.all { it.isDigit() }
+            val client = HttpClient(CIO) {
+                expectSuccess = true
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            prettyPrint = true
+                            isLenient = true
+                        }
+                    )
+                }
+            }
+
+            try {
+                val response = client.get {
+                    url(Environment.getOrFail("CREDENTIAL_SERVER"))
+                    headers {
+                        if (is2FACode) {
+                            append("X-2FA-code", code)
+                        }
+                        else {
+                            bearerAuth(code)
+                        }
+                    }
+                }
+
+                if (response.status != HttpStatusCode.OK) {
+                    logger.error("Failed to fetch credentials: Server responded with ${response.status}")
+                    return false
+                }
+
+                val data = response.body<CredentialResponse>()
+
+                if (!data.success) {
+                    logger.error("Failed to fetch credentials")
+                    return false
+                }
+
+                data.config.forEach { (key, value) ->
+                    Environment.set(key.replace("^__MAILBOT_".toRegex(), ""), value)
+                }
+
+                logger.info("Fetched credentials successfully")
+            }
+            catch (e: ResponseException) {
+                logger.error("Failed to fetch credentials: ${e.response.status}")
+                return false
+            }
+            finally {
+                client.close()
+            }
+
+            return true
+        }
     }
 
-    suspend fun boot() {
-        if (Environment["CREDENTIAL_SERVER"] != null && !fetchCredentials()) {
-            exitProcess(1)
-        }
-
+    fun boot() {
         loader.loadServices()
         loader.loadEvents()
         loader.loadCommands()
@@ -134,65 +194,6 @@ class Application(val kord: Kord) {
 
     fun resolveCommand(name: String): Command? {
         return commands[name]
-    }
-
-    private suspend fun fetchCredentials(): Boolean {
-        println("Enter 2FA code for the credentials server: ")
-
-        val code = readln()
-        val is2FACode = code.length == 6 && code.all { it.isDigit() }
-        val client = HttpClient(CIO) {
-            expectSuccess = true
-            install(ContentNegotiation) {
-                json(
-                    Json {
-                        prettyPrint = true
-                        isLenient = true
-                    }
-                )
-            }
-        }
-
-        try {
-            val response = client.get {
-                url(Environment.getOrFail("CREDENTIAL_SERVER"))
-                headers {
-                    if (is2FACode) {
-                        append("X-2FA-code", code)
-                    }
-                    else {
-                        bearerAuth(code)
-                    }
-                }
-            }
-
-            if (response.status != HttpStatusCode.OK) {
-                logger.error("Failed to fetch credentials: Server responded with ${response.status}")
-                return false
-            }
-
-            val data = response.body<CredentialResponse>()
-
-            if (!data.success) {
-                logger.error("Failed to fetch credentials")
-                return false
-            }
-
-            data.config.forEach { (key, value) ->
-                Environment.set(key.replace("^__MAILBOT_".toRegex(), ""), value)
-            }
-
-            logger.info("Fetched credentials successfully")
-        }
-        catch (e: ResponseException) {
-            logger.error("Failed to fetch credentials: ${e.response.status}")
-            return false
-        }
-        finally {
-            client.close()
-        }
-
-        return true
     }
 
     @Serializable
