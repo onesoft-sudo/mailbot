@@ -1,6 +1,7 @@
 package org.onesoftnet.mailbot.mailing
 
 import dev.kord.core.entity.User
+import dev.kord.rest.builder.message.create.MessageCreateBuilder
 import org.ktorm.dsl.*
 import org.onesoftnet.mailbot.core.Application
 import org.onesoftnet.mailbot.models.Mail
@@ -29,5 +30,5 @@ class MailChecker(private val application: Application, private val userId: Stri
             .ifEmpty { entity = null }
     }
 
-    suspend fun createMail(user: User) = application.service(MailService::class).create(user)
+    suspend fun createMail(user: User, block: (MessageCreateBuilder.() -> Unit)? = null) = application.service(MailService::class).create(user, user, block)
 }

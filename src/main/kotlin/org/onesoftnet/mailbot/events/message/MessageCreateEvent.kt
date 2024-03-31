@@ -3,6 +3,7 @@ package org.onesoftnet.mailbot.events.message
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.rest.builder.message.embed
 import kotlinx.coroutines.sync.Semaphore
 import org.onesoftnet.mailbot.arguments.Argument
 import org.onesoftnet.mailbot.core.Application
@@ -45,7 +46,8 @@ class MessageCreateEvent(application: Application) : EventListener<MessageCreate
 
             ifNotFound {
                 event.message.author?.let {
-                    createMail(it)
+                    val (id, channel) = createMail(it)
+                    mailService.forwardUserMessage(event, channel, 0, id)
                     mailService.respondToMailCreation(event)
                     semaphore.release()
                 } ?: semaphore.release()

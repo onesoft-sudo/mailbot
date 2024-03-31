@@ -8,6 +8,7 @@ import dev.kord.core.behavior.getChannelOfOrNull
 import dev.kord.core.behavior.reply
 import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TextChannel
+import dev.kord.rest.builder.message.create.MessageCreateBuilder
 import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
 import org.ktorm.dsl.*
@@ -77,7 +78,7 @@ class MailService(application: Application) : AbstractService(application) {
         }
     }
 
-    suspend fun create(user: User, createdBy: User = user): Int {
+    suspend fun create(user: User, createdBy: User = user, block: (MessageCreateBuilder.() -> Unit)? = null): Pair<Int, TextChannel> {
         val guild = application.getMainGuild()
         val channel = guild.createTextChannel(user.username) {
             parentId = Snowflake(mailCategory)
@@ -96,7 +97,10 @@ class MailService(application: Application) : AbstractService(application) {
             createdBy = createdBy
         )
 
-        return id
+        if (block != null)
+            channel.createMessage(block)
+
+        return Pair(id, channel)
     }
 
     suspend fun respondToMailCreation(event: dev.kord.core.event.message.MessageCreateEvent) {
@@ -111,7 +115,7 @@ class MailService(application: Application) : AbstractService(application) {
                 timestamp = Clock.System.now()
 
                 footer {
-                    text = "Any messages further sent in this DM will be sent to our staff team"
+                    text = "Any messages further sent in this DM will also be sent to our staff team"
                     icon = guild.icon?.cdnUrl?.toUrl()
                 }
             }
@@ -119,9 +123,16 @@ class MailService(application: Application) : AbstractService(application) {
     }
 
     suspend fun forwardUserMessage(event: dev.kord.core.event.message.MessageCreateEvent, mail: Mail) {
-        val guild = application.getMainGuild()
-        val channel = guild.getChannelOfOrNull<TextChannel>(Snowflake(mail.channelId))
+        forwardUserMessage(event, mail.channelId, mail.messages, mail.id)
+    }
 
+    suspend fun forwardUserMessage(event: dev.kord.core.event.message.MessageCreateEvent, channelId: String, messageCount: Int, mailId: Int) {
+        val guild = application.getMainGuild()
+        val channel = guild.getChannelOfOrNull<TextChannel>(Snowflake(channelId))
+        forwardUserMessage(event, channel, messageCount, mailId)
+    }
+
+    suspend fun forwardUserMessage(event: dev.kord.core.event.message.MessageCreateEvent, channel: TextChannel?, messageCount: Int, mailId: Int) {
         channel?.apply {
             val message = createMessage {
                 embed {
@@ -135,24 +146,24 @@ class MailService(application: Application) : AbstractService(application) {
                     timestamp = Clock.System.now()
 
                     footer {
-                        text = "#${mail.messages + 1} • Received • ${event.message.author?.id}"
+                        text = "#${messageCount + 1} • Received • ${event.message.author?.id}"
                     }
                 }
             }
 
             application.database.insert(MailMessages) {
                 set(it.userId, event.message.author?.id?.toString() ?: throw IllegalStateException("User ID not found"))
-                set(it.threadId, mail.id)
+                set(it.threadId, mailId)
                 set(it.messageId, message.id.toString())
                 set(it.content, event.message.content)
-                set(it.serialNumber, mail.messages + 1)
+                set(it.serialNumber, messageCount + 1)
                 set(it.type, MailMessageType.USER_REPLY.value)
             }
 
             application.database.update(Mails) {
-                set(it.messages, mail.messages + 1)
+                set(it.messages, messageCount + 1)
                 where {
-                    it.id eq mail.id
+                    it.id eq mailId
                 }
             }
         }
