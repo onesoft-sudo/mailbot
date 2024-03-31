@@ -49,7 +49,6 @@ class ReplyCommand(application: Application) : Command(application) {
 
         mail.reply(application) {
             this.content = content
-            userId = context.member.id.toString()
             type = MailMessageType.STAFF_REPLY
             attributes = MailMessage.Attributes(
                 anonymous = anonymous

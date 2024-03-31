@@ -21,7 +21,7 @@ class MailReplyBuilder(val application: Application, val mail: Mail) {
 
     lateinit var content: String
     lateinit var type: MailMessageType
-    lateinit var userId: String
+    val userId = mail.userId
     lateinit var messageId: String
     lateinit var attributes: MailMessage.Attributes
 
