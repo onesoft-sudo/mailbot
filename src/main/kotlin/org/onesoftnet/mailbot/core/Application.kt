@@ -75,7 +75,7 @@ class Application(val kord: Kord) {
         }
 
         private suspend fun fetchCredentials(): Boolean {
-            println("Enter 2FA code for the credentials server: ")
+            print("Enter 2FA code for the credentials server: ")
 
             val code = readln()
             val is2FACode = code.length == 6 && code.all { it.isDigit() }
