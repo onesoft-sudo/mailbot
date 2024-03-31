@@ -1,6 +1,7 @@
 package org.onesoftnet.mailbot.commands.mailing
 
 import dev.kord.common.Color
+import dev.kord.common.entity.Permission
 import dev.kord.core.behavior.reply
 import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
@@ -31,7 +32,15 @@ class ReplyCommand(application: Application) : Command(application) {
         val mail = getMailThread(context)
         val content = args.first().transformedValue as String
         val anonymous = context.commandName.startsWith("a")
-        val contextName = if (anonymous) "Staff" else context.member.tag
+        val contextName =
+            if (anonymous)
+                mail.attributes.displayNames[context.member.id.toString()] ?:
+                if (context.getMemberPermissions().contains(Permission.Administrator))
+                    "Admin"
+                else
+                    "Staff"
+            else
+                context.member.tag
         val contextAvatar =
             if (anonymous)
                 application.kord.getSelf().avatar?.cdnUrl?.toUrl()

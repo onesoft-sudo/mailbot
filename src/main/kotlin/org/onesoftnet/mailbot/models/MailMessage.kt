@@ -31,7 +31,7 @@ data class MailMessage(
 
     @Serializable
     data class Attributes(
-        val anonymous: Boolean,
+        val anonymous: Boolean = false,
     ) {
         override fun toString(): String {
             return Json.encodeToString(this)
