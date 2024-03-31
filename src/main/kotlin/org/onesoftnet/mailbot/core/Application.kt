@@ -8,16 +8,27 @@ import dev.kord.core.Kord
 import dev.kord.core.enableEvents
 import dev.kord.core.entity.Guild
 import dev.kord.core.event.message.MessageCreateEvent
-import dev.kord.core.on
 import dev.kord.gateway.*
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.util.reflect.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.ktorm.database.Database
 import org.onesoftnet.mailbot.annotations.Service
 import org.onesoftnet.mailbot.utils.Environment
+import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
+import kotlin.system.exitProcess
 
 
 val applicationScope = CoroutineScope(Dispatchers.Default)
@@ -28,6 +39,7 @@ class Application(val kord: Kord) {
     private val serviceNames = mutableMapOf<String, AbstractService>()
     private var mainGuild: Guild? = null
     private val commands = mutableMapOf<String, Command>()
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     val database = Database.connect(
         url = Environment.getOrFail("DB_URL"),
@@ -58,7 +70,11 @@ class Application(val kord: Kord) {
         }
     }
 
-    fun boot() {
+    suspend fun boot() {
+        if (Environment["CREDENTIAL_SERVER"] != null && !fetchCredentials()) {
+            exitProcess(1)
+        }
+
         loader.loadServices()
         loader.loadEvents()
         loader.loadCommands()
@@ -119,4 +135,70 @@ class Application(val kord: Kord) {
     fun resolveCommand(name: String): Command? {
         return commands[name]
     }
+
+    private suspend fun fetchCredentials(): Boolean {
+        println("Enter 2FA code for the credentials server: ")
+
+        val code = readln()
+        val is2FACode = code.length == 6 && code.all { it.isDigit() }
+        val client = HttpClient(CIO) {
+            expectSuccess = true
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        prettyPrint = true
+                        isLenient = true
+                    }
+                )
+            }
+        }
+
+        try {
+            val response = client.get {
+                url(Environment.getOrFail("CREDENTIAL_SERVER"))
+                headers {
+                    if (is2FACode) {
+                        append("X-2FA-code", code)
+                    }
+                    else {
+                        bearerAuth(code)
+                    }
+                }
+            }
+
+            if (response.status != HttpStatusCode.OK) {
+                logger.error("Failed to fetch credentials: Server responded with ${response.status}")
+                return false
+            }
+
+            val data = response.body<CredentialResponse>()
+
+            if (!data.success) {
+                logger.error("Failed to fetch credentials")
+                return false
+            }
+
+            data.config.forEach { (key, value) ->
+                println("$key = $value")
+                Environment.set(key, value)
+            }
+
+            logger.info("Fetched credentials successfully")
+        }
+        catch (e: ResponseException) {
+            logger.error("Failed to fetch credentials: ${e.response.status}")
+            return false
+        }
+        finally {
+            client.close()
+        }
+
+        return true
+    }
+
+    @Serializable
+    private data class CredentialResponse(
+        val success: Boolean,
+        val config: Map<String, String>
+    )
 }
