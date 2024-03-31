@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.9.23"
     kotlin("plugin.spring") version "1.9.23"
     kotlin("plugin.jpa") version "1.9.23"
+    kotlin("plugin.serialization") version "1.9.22"
     application
 }
 
@@ -28,13 +29,12 @@ dependencies {
     implementation("dev.kord:kord-core:0.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1-Beta")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1-Beta")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.16.0")
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.slf4j:slf4j-simple:2.0.12")
     implementation("org.ktorm:ktorm-core:3.6.0")
     implementation("org.ktorm:ktorm-support-postgresql:3.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }

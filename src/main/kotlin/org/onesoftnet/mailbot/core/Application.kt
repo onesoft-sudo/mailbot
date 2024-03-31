@@ -47,6 +47,10 @@ class Application(val kord: Kord) {
                     messages { cache, description ->
                         MapEntryCache(cache, description, MapLikeCollection.lruLinkedHashMap(maxSize = 100))
                     }
+
+                    channels { cache, description ->
+                        MapEntryCache(cache, description, MapLikeCollection.concurrentHashMap())
+                    }
                 }
             }
 

@@ -10,9 +10,7 @@ import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
-import org.ktorm.dsl.eq
-import org.ktorm.dsl.insert
-import org.ktorm.dsl.update
+import org.ktorm.dsl.*
 import org.onesoftnet.mailbot.annotations.Service
 import org.onesoftnet.mailbot.core.AbstractService
 import org.onesoftnet.mailbot.core.Application
@@ -26,11 +24,19 @@ import org.onesoftnet.mailbot.utils.Environment
 
 @Service
 class MailService(application: Application) : AbstractService(application) {
+    val mailCategory = Environment.getOrFail("MAIL_CATEGORY_ID")
+
     suspend fun check(userId: String, block: suspend MailChecker.() -> Unit) {
         val mailChecker = MailChecker(application, userId)
         mailChecker.check()
         mailChecker.block()
     }
+
+    fun getMailByChannelId(channelId: String) = application.database.from(Mails)
+        .select(Mails.columns)
+        .where { Mails.channelId eq channelId }
+        .map { Mails.createEntity(it) }
+        .firstOrNull()
 
     private suspend fun sendInitialMessage(threadId: Int, channel: TextChannel, user: User, createdBy: User = user) {
         channel.createMessage {
@@ -74,7 +80,7 @@ class MailService(application: Application) : AbstractService(application) {
     suspend fun create(user: User, createdBy: User = user): Int {
         val guild = application.getMainGuild()
         val channel = guild.createTextChannel(user.username) {
-            parentId = Snowflake(Environment.getOrFail("MAIL_CATEGORY_ID"))
+            parentId = Snowflake(mailCategory)
             topic = "Mail thread for ${user.username} (<@${user.id}>)"
         }
 
