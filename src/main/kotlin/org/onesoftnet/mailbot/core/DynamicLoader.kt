@@ -1,9 +1,9 @@
 package org.onesoftnet.mailbot.core
 
+import com.google.common.reflect.ClassPath
 import dev.kord.core.event.Event
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.primaryConstructor
 
 class DynamicLoader(private val application: Application) {
@@ -19,44 +19,22 @@ class DynamicLoader(private val application: Application) {
 
     private fun <T : Any> loadClassesInPackage(packageName: String, forEach: (() -> Boolean)?): List<KClass<T>>? {
         val classLoader = ClassLoader.getSystemClassLoader()
-        val stream = classLoader
-            .getResourceAsStream(packageName.replace("[.]".toRegex(), "/"))
-
-        if (stream == null) {
-            return null
-        }
-
-        val reader = stream.bufferedReader()
-        val classes = mutableListOf<KClass<T>>()
-
-        reader.useLines {
-            it.forEach { className ->
-                if (className.contains('$')) {
-                    return@forEach
-                }
-
-                if (!className.endsWith(".class")) {
-                    loadClassesInPackage<T>("$packageName.$className")?.let { clazz -> classes.addAll(clazz) }
-                }
-
-                val dotIndex = className.indexOf('.')
-
-                if (dotIndex == -1) {
-                    return@forEach
-                }
-
-                val clazz = classLoader.loadClass("$packageName.${className.substring(0, dotIndex)}")
+        return ClassPath.from(classLoader)
+            .allClasses
+            .filter {
+                it.packageName.startsWith(packageName) &&
+                !it.name.contains('$')
+            }
+            .map {
+                val clazz = it.load().kotlin
 
                 if (forEach?.invoke() == false) {
                     return null
                 }
 
                 @Suppress("UNCHECKED_CAST")
-                classes.addLast(clazz.kotlin as KClass<T>)
+                clazz as KClass<T>
             }
-        }
-
-        return classes.toList()
     }
 
      fun loadEvents() {
