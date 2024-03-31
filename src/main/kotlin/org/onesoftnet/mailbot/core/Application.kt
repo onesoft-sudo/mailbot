@@ -179,8 +179,7 @@ class Application(val kord: Kord) {
             }
 
             data.config.forEach { (key, value) ->
-                println("$key = $value")
-                Environment.set(key, value)
+                Environment.set(key.replace("^__MAILBOT_".toRegex(), ""), value)
             }
 
             logger.info("Fetched credentials successfully")
