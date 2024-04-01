@@ -12,6 +12,7 @@ import dev.kord.rest.builder.message.create.MessageCreateBuilder
 import dev.kord.rest.builder.message.embed
 import kotlinx.datetime.Clock
 import org.ktorm.dsl.*
+import org.ktorm.support.postgresql.insertReturning
 import org.onesoftnet.mailbot.annotations.Service
 import org.onesoftnet.mailbot.core.AbstractService
 import org.onesoftnet.mailbot.core.Application
@@ -85,9 +86,13 @@ class MailService(application: Application) : AbstractService(application) {
             topic = "Mail thread for ${user.username} (<@${user.id}>)"
         }
 
-        val id = application.database.insert(Mails) {
+        val id = application.database.insertReturning(Mails, Mails.id) {
             set(it.userId, user.id.toString())
             set(it.channelId, channel.id.toString())
+        }
+
+        if (id == null) {
+            throw IllegalStateException("Failed to create mail thread")
         }
 
         sendInitialMessage(
@@ -126,7 +131,7 @@ class MailService(application: Application) : AbstractService(application) {
         forwardUserMessage(event, mail.channelId, mail.messages, mail.id)
     }
 
-    suspend fun forwardUserMessage(event: dev.kord.core.event.message.MessageCreateEvent, channelId: String, messageCount: Int, mailId: Int) {
+    private suspend fun forwardUserMessage(event: dev.kord.core.event.message.MessageCreateEvent, channelId: String, messageCount: Int, mailId: Int) {
         val guild = application.getMainGuild()
         val channel = guild.getChannelOfOrNull<TextChannel>(Snowflake(channelId))
         forwardUserMessage(event, channel, messageCount, mailId)

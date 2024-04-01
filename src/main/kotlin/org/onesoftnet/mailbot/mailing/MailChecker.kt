@@ -30,5 +30,6 @@ class MailChecker(private val application: Application, private val userId: Stri
             .ifEmpty { entity = null }
     }
 
-    suspend fun createMail(user: User, block: (MessageCreateBuilder.() -> Unit)? = null) = application.service(MailService::class).create(user, user, block)
+    suspend fun createMail(user: User, block: (MessageCreateBuilder.() -> Unit)? = null) =
+        application.service(MailService::class).create(user, user, block)
 }
