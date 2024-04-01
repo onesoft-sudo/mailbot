@@ -24,7 +24,7 @@ class MailChecker(private val application: Application, private val userId: Stri
         application.database
             .from(Mails)
             .select(Mails.columns)
-            .where { Mails.userId eq userId }
+            .where { (Mails.userId eq userId) and (Mails.closed eq false) }
             .limit(1)
             .map { entity = Mails.createEntity(it) }
             .ifEmpty { entity = null }

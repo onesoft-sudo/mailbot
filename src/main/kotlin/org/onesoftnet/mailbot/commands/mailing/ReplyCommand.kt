@@ -15,14 +15,16 @@ import org.onesoftnet.mailbot.models.MailMessage
 
 class ReplyCommand(application: Application) : Command(application) {
     override val name = "reply"
-    override val description = "Reply to a mailing list"
-    override val usage = "reply <mailing-list> <message>"
+    override val description = "Reply to a mail thread"
+    override val usage = "<message>"
     override val aliases = listOf("r", "a", "respond", "arespond", "ar")
     override val arguments = listOf(StringRestArgument::class)
     override val optionalsAfter = arguments.size
     override val mailOnly = true
 
-    override suspend fun build() {}
+    override suspend fun build() {
+        TODO()
+    }
 
     override suspend fun execute(context: Context<out Any>, args: List<Argument<out Any>>) {
         if (context !is Context.Legacy) {

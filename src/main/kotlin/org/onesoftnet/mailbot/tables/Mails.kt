@@ -3,10 +3,7 @@ package org.onesoftnet.mailbot.tables
 import kotlinx.serialization.json.Json
 import org.ktorm.database.Database
 import org.ktorm.dsl.QueryRowSet
-import org.ktorm.schema.BaseTable
-import org.ktorm.schema.datetime
-import org.ktorm.schema.int
-import org.ktorm.schema.varchar
+import org.ktorm.schema.*
 import org.onesoftnet.mailbot.models.Mail
 import java.time.LocalDateTime
 
@@ -17,6 +14,7 @@ object Mails : BaseTable<Mail>("mails") {
     val messages = int("messages")
     val channelId = varchar("channel_id")
     val attributes = varchar("attributes")
+    val closed = boolean("closed")
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 
@@ -26,6 +24,7 @@ object Mails : BaseTable<Mail>("mails") {
         messages = row[messages] ?: 0,
         channelId = row[channelId] ?: throw IllegalStateException("Channel ID is null!"),
         userId = row[userId] ?: throw IllegalStateException("User ID is null!"),
+        closed = row[closed] ?: false,
         createdAt = row[createdAt] ?: LocalDateTime.now(),
         updatedAt = row[updatedAt] ?: LocalDateTime.now(),
         attributes = Json.decodeFromString<Mail.Attributes>(row[attributes] ?: "{}")

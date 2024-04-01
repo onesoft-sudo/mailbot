@@ -1,12 +1,16 @@
 package org.onesoftnet.mailbot.core
 
+import dev.kord.common.Color
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
 import dev.kord.core.behavior.reply
 import dev.kord.core.event.Event
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.rest.builder.message.MessageBuilder
+import dev.kord.rest.builder.message.embed
+import kotlinx.datetime.Clock
 import org.onesoftnet.mailbot.arguments.Argument
+import org.onesoftnet.mailbot.extensions.send
 import org.onesoftnet.mailbot.models.Mail
 import org.onesoftnet.mailbot.services.MailService
 import org.slf4j.LoggerFactory
@@ -70,7 +74,7 @@ abstract class Command(val application: Application) {
         }
     }
 
-    fun abort(): Nothing = throw CommandAbortException()
+    protected fun abort(): Nothing = throw CommandAbortException()
 
     suspend fun getMailThread(context: Context<out Any>): Mail {
         val service = application.service(MailService::class)
@@ -86,5 +90,31 @@ abstract class Command(val application: Application) {
         }
 
         return mail
+    }
+
+    suspend fun closeCurrentMailThread(context: Context<out Any>, block: (suspend Mail.() -> Unit)? = null) {
+        val mail = getMailThread(context)
+        block?.invoke(mail)
+        mail.close(application, context.getChannel())
+
+        runCatching {
+            val guildIcon = application.getMainGuild().icon?.cdnUrl?.toUrl()
+
+            mail.user()?.send {
+                embed {
+                    title = "Thread Closed"
+                    description = "Your thread has been closed. If you need any further help, feel free to DM again."
+                    color = Color(0x007bff)
+                    timestamp = Clock.System.now()
+
+                    footer {
+                        text = "Closed"
+                        icon = guildIcon
+                    }
+                }
+            }
+        }.onFailure { e ->
+            LoggerFactory.getLogger(this.javaClass).error("An error occurred while closing the mail thread", e)
+        }
     }
 }

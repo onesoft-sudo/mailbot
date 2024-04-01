@@ -48,6 +48,17 @@ class Application(val kord: Kord) {
     )
 
     companion object {
+        private var _instance: Application? = null
+        val instance: Application
+            get() {
+                if (_instance == null) {
+                    throw IllegalStateException("Application has not been created yet!")
+                }
+
+                return _instance!!
+            }
+        val kord get() = instance.kord
+
         private val logger = LoggerFactory.getLogger(Application::class.java)
 
         suspend fun create(): Application {
@@ -71,7 +82,8 @@ class Application(val kord: Kord) {
                 }
             }
 
-            return Application(kord)
+            _instance = Application(kord)
+            return instance
         }
 
         private suspend fun fetchCredentials(): Boolean {

@@ -36,7 +36,7 @@ class MailService(application: Application) : AbstractService(application) {
 
     fun getMailByChannelId(channelId: String) = application.database.from(Mails)
         .select(Mails.columns)
-        .where { Mails.channelId eq channelId }
+        .where { (Mails.channelId eq channelId) and (Mails.closed eq false) }
         .map { Mails.createEntity(it) }
         .firstOrNull()
 
@@ -168,7 +168,7 @@ class MailService(application: Application) : AbstractService(application) {
             application.database.update(Mails) {
                 set(it.messages, messageCount + 1)
                 where {
-                    it.id eq mailId
+                    (it.id eq mailId) and (Mails.closed eq false)
                 }
             }
         }
